@@ -4,7 +4,7 @@
 > Para facilitar a visualização sem a necessidade de configurar um ambiente local com MySQL e Flask, 
 > esta versão utiliza **dados mockados** (estáticos) no JavaScript.
 
-### 🔗 [Acesse a Demo Online Aqui (GitHub Pages/Vercel)]
+### 🔗 [Acesse a Demo Online Aqui (https://eduvale007.github.io/academic-showcase/)]
 
 ---
 
