@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link  rel="stylesheet" href="static/style.css"/>
+    <title>GestãoPro - Sistema de Gestão de Estoque</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+
+
+
+
+
+ <!-- Header Navigation -->
+    <nav class="header-nav">
+        <div class="nav-container">
+            <div class="logo">GestãoPro</div>
+            <div class="nav-tabs">
+                <a class="nav-tab active" onclick="showTab('estoque')">Estoque</a>
+                <a class="nav-tab" onclick="showTab('previsao')">Previsão de Demanda</a>
+            </div>
+        </div>
+    </nav>
+
+
+ <!-- Main Container -->
+    <div class="main-container">
+        <!-- Estoque Tab -->
+        <div id="estoque" class="tab-content active">
+            <div class="page-header">
+                <h1 class="page-title">Gerenciar Estoque</h1>
+                <p class="page-subtitle">Controle completo do seu inventário</p>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" style="color: #3b82f6;" id="totalProducts">0</div>
+                    <div class="stat-label">Total de Produtos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: #dc2626;" id="lowStockCount">0</div>
+                    <div class="stat-label">Estoque Baixo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: #059669;" id="totalValue">R$ 0</div>
+                    <div class="stat-label">Valor Total</div>
+                </div>
+            </div>
+            
+            <div class="search-container" style="margin-bottom:16px;">
+              <input type="text" id="searchProduct" placeholder="Pesquisar por nome ou ID" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+            </div>
+
+
+            <!-- Add Product Form -->
+            <div class="form-section">
+                <h2 class="form-title">Adicionar Produto</h2>
+                <form id="productForm" action="/insertProduct" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="productName">Nome do Produto</label>
+                            <input type="text" id="productName" required name="productName">
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Categoria</label>
+                            <select id="category" required name="category">
+                                <option value="">Selecione uma categoria</option>
+                                <option value="Eletrônicos">Eletrônicos</option>
+                                <option value="Roupas">Roupas</option>
+                                <option value="Alimentação">Alimentação</option>
+                                <option value="Casa">Casa e Jardim</option>
+                                <option value="Livros">Livros</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="currentStock">Quantidade</label>
+                            <input type="number" id="currentStock" min="0" required name="currentStock">
+                        </div>
+                        <div class="form-group">
+                            <label for="minStock">Estoque Mínimo</label>
+                            <input type="number" id="minStock" min="0" required name="minStock">
+                        </div>
+                        <div class="form-group">
+                            <label for="unitPrice">Preço Unitário (R$)</label>
+                            <input type="number" id="unitPrice" min="0" step="0.01" required name="unitPrice">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn">Salvar Produto</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Products Table -->
+            <table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome do Produto</th>
+            <th>Categoria</th>
+            <th>Quantidade</th>
+            <th>Estoque Mín.</th>
+            <th>Preço Unit.</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody id="productsTable">
+        <tr>
+            <td>{{ produto.id_produto }}</td>
+            <td>{{ produto.nome_produto }}</td>
+            <td>{{ produto.categoria }}</td>
+            <td>{{ produto.quantidade }}</td>
+            <td>{{ produto.estoque_minimo }}</td>
+            <td>R$ {{ produto.preco_unitario }}</td>
+            <td>
+                <button  data-id="{{produto.id_produto}}" class="btn-edit">Editar</button>
+                <button data-id="{{produto.id_produto}}" class="btn-delete">Excluir</button>
+            </td>
+        </tr>
+   
+        <tr>
+            <td colspan="7" style="text-align:center; color:#6b7280; padding:40px;">
+                Nenhum produto cadastrado
+            </td>
+        </tr>
+ 
+    </tbody>
+</table>
+
+
+            <!-- Edit Product Form -->
+            <div class="form-section-edit">
+                <h2 class="form-title-edit">Editar produto</h2>
+                <form id="productForm_edit">
+                    <input type="hidden" id="productId" name="productId">
+                    <div class="form-grid-edit">
+                        <div class="form-group-edit">
+                            <label for="productName">Nome do Produto</label>
+                            <input type="text" id="productName_edit" required name="productName-edit">
+                        </div>
+                        <div class="form-group-edit">
+                            <label for="category">Categoria</label>
+                            <select id="category_edit" required name="category-edit">
+                                <option value="">Selecione uma categoria</option>
+                                <option value="Eletrônicos">Eletrônicos</option>
+                                <option value="Roupas">Roupas</option>
+                                <option value="Alimentação">Alimentação</option>
+                                <option value="Casa">Casa e Jardim</option>
+                                <option value="Livros">Livros</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group-edit">
+                            <label for="currentStock">Quantidade</label>
+                            <input type="number" id="currentStock_edit" min="0" required name="currentStock-edit">
+                        </div>
+                        <div class="form-group-edit">
+                            <label for="minStock">Estoque Mínimo</label>
+                            <input type="number" id="minStock_edit" min="0" required name="minStock-edit">
+                        </div>
+                        <div class="form-group-edit">
+                            <label for="unitPrice">Preço Unitário (R$)</label>
+                            <input type="number" id="unitPrice_edit" min="0" step="0.01" required name="unitPrice-edit">
+                        </div>
+                        <div class="form-group-edit">
+                            <button type="submit" class="btn">Salvar Produto Editado</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid" style="margin-top: 32px;">
+                <div class="chart-card">
+                    <h3 class="chart-title">Distribuição por Categoria</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Níveis de Estoque</h3>
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+  
+
+        <!-- Previsão Tab -->
+        <div id="previsao" class="tab-content">
+            <div class="page-header">
+                <h1 class="page-title">Previsão de Demanda</h1>
+                <p class="page-subtitle">Análise preditiva baseada em regressão linear</p>
+            </div>
+
+            <div class="form-section">
+                <h2 class="form-title">Gerar Previsão</h2>
+                <div class="prediction-form">
+                    <div class="form-group">
+                        <label for="predictProduct">Produto para Previsão</label>
+                        <select id="predictProduct">
+                            <option value="">Selecione um produto</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="predictDays">Dias para Previsão</label>
+                        <input type="number" id="predictDays" min="1" max="365" value="30">
+                    </div>
+                    <div class="form-group">
+                        <button onclick="generatePrediction()" class="btn">Gerar Previsão</button>
+                    </div>
+                </div>
+                <div id="predictionResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+  // =====================
+  // Backend products
+  // =====================
+ 
+
+  // =====================
+// MOCK DATA (Dados fictícios para a Demo)
+// =====================
+let products = [
+    { id_produto: 1, name: "Teclado Mecânico RGB", category: "Eletrônicos", stock: 15, minStock: 10, price: 250.00 },
+    { id_produto: 2, name: "Monitor 24' 144Hz", category: "Eletrônicos", stock: 4, minStock: 5, price: 1200.00 },
+    { id_produto: 3, name: "Mouse Gamer", category: "Eletrônicos", stock: 25, minStock: 10, price: 150.00 },
+    { id_produto: 4, name: "Cadeira Ergonômica", category: "Outros", stock: 8, minStock: 3, price: 890.00 },
+    { id_produto: 5, name: "Headset 7.1", category: "Eletrônicos", stock: 2, minStock: 5, price: 320.00 }
+];
+
+let categoryChart, stockChart;
+
+// =====================
+// Inicialização
+// =====================
+function init() {
+    // Na demo, não fazemos fetch. Apenas renderizamos o que está no array 'products'
+    updateDashboard();
+    renderProductsTable();
+    initializeCharts();
+    updateProductSelect();
+
+    // Evento de busca (Filtro local)
+    const searchInput = document.getElementById('searchProduct');
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearch);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// =====================
+// Funções de Interface (Mantidas do original)
+// =====================
+
+function showTab(tabName, event) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    if (event) event.currentTarget.classList.add('active');
+}
+
+function updateDashboard() {
+    const totalProducts = products.length;
+    const lowStockCount = products.filter(p => p.stock <= p.minStock).length;
+    const totalValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
+
+    document.getElementById('totalProducts').textContent = totalProducts;
+    document.getElementById('lowStockCount').textContent = lowStockCount;
+    document.getElementById('totalValue').textContent = `R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+}
+
+// =====================
+// CRUD SIMULADO (A mágica da Demo)
+// =====================
+
+// Excluir Produto (Local)
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-delete')) {
+        const id = parseInt(e.target.getAttribute('data-id'));
+        if (confirm('Demo: Deseja remover este produto da visualização?')) {
+            products = products.filter(p => p.id_produto !== id);
+            refreshUI();
+        }
+    }
+});
+
+// Editar Produto (Local)
+const editForm = document.getElementById('productForm_edit');
+editForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('productId').value);
+    
+    const index = products.findIndex(p => p.id_produto === id);
+    if (index !== -1) {
+        products[index] = {
+            id_produto: id,
+            name: document.getElementById('productName_edit').value,
+            category: document.getElementById('category_edit').value,
+            stock: Number(document.getElementById('currentStock_edit').value),
+            minStock: Number(document.getElementById('minStock_edit').value),
+            price: Number(document.getElementById('unitPrice_edit').value)
+        };
+        
+        alert("Demo: Produto atualizado localmente!");
+        refreshUI();
+        document.querySelector('.form-section-edit').classList.remove('open');
+    }
+});
+
+// Função auxiliar para atualizar tudo após mudar o array
+function refreshUI() {
+    updateDashboard();
+    renderProductsTable();
+    updateCharts();
+    updateProductSelect();
+}
+
+// =====================
+// Renderização da Tabela
+// =====================
+function renderProductsTable(filteredData = null) {
+    const dataToRender = filteredData || products;
+    const tbody = document.getElementById('productsTable');
+
+    if (!dataToRender.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:40px;">Nenhum produto encontrado</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = dataToRender.map((product, index) => {
+        const stockStatus = product.stock <= product.minStock ? 'status-low' :
+                            product.stock <= product.minStock * 1.5 ? 'status-warning' : 'status-normal';
+
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${product.name}</td>
+                <td>${product.category}</td>
+                <td class="${stockStatus}">${product.stock}</td>
+                <td>${product.minStock}</td>
+                <td>R$ ${product.price.toFixed(2)}</td>
+                <td>
+                    <button data-id="${product.id_produto}" class="btn-edit">Editar</button>
+                    <button data-id="${product.id_produto}" class="btn-delete">Excluir</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function handleSearch() {
+    const term = this.value.toLowerCase().trim();
+    const filtered = products.filter(p => 
+        p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term)
+    );
+    renderProductsTable(filtered);
+}
+
+
+
+const formSection = document.querySelector('.form-section-edit');
+let formIsOpen = false;
+let activeEditButton = null; // botão que abriu o formulário
+
+// Cria botão de fechar
+if (formSection && !formSection.querySelector('.close-btn')) {
+  const closeButton = document.createElement('button');
+  closeButton.innerHTML = '&times;';
+  closeButton.className = 'close-btn';
+  closeButton.type = 'button';
+  closeButton.title = 'Fechar formulário';
+  closeButton.addEventListener('click', () => toggleForm(activeEditButton));
+  formSection.insertBefore(closeButton, formSection.firstChild);
+}
+
+function openForm(button) {
+  formSection.classList.add('open');
+  formIsOpen = true;
+  activeEditButton = button;
+  button.textContent = 'Fechar';
+}
+
+function closeForm(button) {
+  formSection.classList.remove('open');
+  formIsOpen = false;
+  if (button) button.textContent = 'Editar';
+  const form = formSection.querySelector('#productForm');
+  if (form) form.reset();
+  activeEditButton = null;
+}
+
+function toggleForm(button) {
+  if (formIsOpen) {
+    closeForm(button);
+  } else {
+    openForm(button);
+    formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Delegação de eventos para todos os botões "Editar"
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('btn-edit')) {
+    e.preventDefault();
+    toggleForm(e.target);
+  }
+});
+
+// Fechar ao pressionar ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && formIsOpen) {
+    closeForm(activeEditButton);
+  }
+});
+
+
+
+
+  
+
+
+
+// Preenche o formulário ao clicar em "Editar"
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('btn-edit')) {
+    const btn = e.target;
+    const produto = products.find(p => p.id_produto == btn.dataset.id);
+
+    if (!produto) return alert("Produto não encontrado.");
+
+    // Preenche o formulário
+    document.getElementById('productId').value = produto.id_produto;
+    document.getElementById('productName_edit').value = produto.name;
+    document.getElementById('category_edit').value = produto.category;
+    document.getElementById('currentStock_edit').value = produto.stock;
+    document.getElementById('minStock_edit').value = produto.minStock;
+    document.getElementById('unitPrice_edit').value = produto.price;
+
+    // Abre formulário
+    document.querySelector('.form-section-edit').classList.add('open');
+  }
+});
+
+
+
+
+ 
+
+
+
+
+  // Initialize charts
+  function initializeCharts() {
+      const categoryCanvas = document.getElementById('categoryChart');
+    const stockCanvas = document.getElementById('stockChart');
+
+    if (!categoryCanvas || !stockCanvas) {
+        console.error("Canvas dos gráficos não encontrados no DOM!");
+        return;
+    }
+ 
+
+    const categoryCtx = categoryCanvas.getContext('2d');
+    const stockCtx = stockCanvas.getContext('2d');
+
+
+     // Destrói gráficos existentes antes de criar novos
+    if (categoryChart) categoryChart.destroy();
+    if (stockChart) stockChart.destroy();
+
+    categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#3b82f6','#1d4ed8','#06b6d4','#0891b2','#059669','#047857','#dc2626','#b91c1c'] }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    stockChart = new Chart(stockCtx, {
+        type: 'bar',
+        data: { labels: [], datasets: [
+            { label: 'Estoque Atual', data: [], backgroundColor: 'rgba(59,130,246,0.8)', borderColor:'#3b82f6', borderWidth:2 },
+            { label: 'Estoque Mínimo', data: [], backgroundColor: 'rgba(220,38,38,0.8)', borderColor:'#dc2626', borderWidth:2 }
+        ] },
+        options: { responsive:true, scales: { y:{ beginAtZero:true } } }
+    });
+
+    updateCharts();
+  }
+
+  // Update charts
+  function updateCharts() {
+    // Category chart
+    const categoryData = {};
+    products.forEach(p => { categoryData[p.category] = (categoryData[p.category] || 0) + 1; });
+
+    categoryChart.data.labels = Object.keys(categoryData);
+    categoryChart.data.datasets[0].data = Object.values(categoryData);
+    categoryChart.update();
+
+    // Stock chart (top 8)
+    const topProducts = products.slice(0, 8);
+    stockChart.data.labels = topProducts.map(p => p.name.length > 20 ? p.name.substring(0,20)+'...' : p.name);
+    stockChart.data.datasets[0].data = topProducts.map(p => p.stock);
+    stockChart.data.datasets[1].data = topProducts.map(p => p.minStock);
+    stockChart.update();
+  }
+
+  
+  // Update product select for prediction
+  function updateProductSelect() {
+    const select = document.getElementById('predictProduct');
+    select.innerHTML = '<option value="">Selecione um produto</option>' +
+      products.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+  }
+
+
+  // Prediction
+  function generatePrediction() {
+    const productIndex = document.getElementById('predictProduct').value;
+    const days = parseInt(document.getElementById('predictDays').value);
+
+    if (!productIndex || !days) { alert('Selecione produto e número de dias'); return; }
+
+    const product = products[productIndex];
+    const historicalData = generateHistoricalData(product);
+    const prediction = calculateLinearRegression(historicalData, days);
+
+    const resultDiv = document.getElementById('predictionResult');
+    resultDiv.innerHTML = `
+      <div class="prediction-result">
+        <div class="prediction-value">${prediction.demand} unidades</div>
+        <div>Demanda prevista para ${days} dias - ${product.name}</div>
+        <div style="margin-top:10px;">Tendência: ${prediction.trend>0?'📈 Crescente':prediction.trend<0?'📉 Decrescente':'➡️ Estável'}</div>
+        <div class="prediction-recommendation"><strong>Recomendação:</strong><br>${prediction.recommendation}</div>
+      </div>
+    `;
+  }
+
+  function generateHistoricalData(product) {
+    const data = [];
+    const base = Math.max(1, Math.floor(product.stock/30));
+    for(let i=30;i>=0;i--){
+      const variation=(Math.random()-0.5)*0.4;
+      const seasonality=Math.sin(i*Math.PI/15)*0.2;
+      const trend=-i*0.01;
+      data.push({day:30-i,demand:Math.max(1,Math.floor(base*(1+variation+seasonality+trend)))});
+    }
+    return data;
+  }
+
+  function calculateLinearRegression(data, forecastDays) {
+    const n=data.length;
+    const sumX=data.reduce((s,d)=>s+d.day,0);
+    const sumY=data.reduce((s,d)=>s+d.demand,0);
+    const sumXY=data.reduce((s,d)=>s+d.day*d.demand,0);
+    const sumX2=data.reduce((s,d)=>s+d.day*d.day,0);
+    const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
+    const intercept=(sumY-slope*sumX)/n;
+    const futureDemand=Math.max(1,Math.floor(slope*(30+forecastDays)+intercept));
+
+    let recommendation="";
+    if(slope>0.5) recommendation="Demanda crescente detectada. Considere aumentar o estoque em 20-30%.";
+    else if(slope<-0.5) recommendation="Demanda decrescente. Monitore o estoque para evitar excesso.";
+    else recommendation="Demanda estável. Mantenha os níveis atuais de estoque.";
+
+    return {demand:futureDemand, trend:slope, recommendation};
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    
+
+  
+</body>
+</html>
